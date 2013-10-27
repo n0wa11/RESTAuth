@@ -1,0 +1,9 @@
+venv
+*.pyc
+_config.py
+*~
+*.1
+*.2
+*.3
+*.bak
+
