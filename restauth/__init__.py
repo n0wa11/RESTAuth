@@ -7,6 +7,25 @@ import os, traceback, time
 os.environ['TZ'] = 'Asia/Shanghai'
 time.tzset()
 
+
+#https://github.com/kljensen/async-flask-sqlalchemy-example
+if "PSYCOGREEN" in os.environ:
+
+    # Do our monkey patching
+    #
+    from gevent.monkey import patch_all
+    patch_all()
+    from psycogreen.gevent import patch_psycopg
+    patch_psycopg()
+
+    print 'using gevent'
+    using_gevent = True
+
+else:
+    print 'not using gevent'
+    using_gevent = False
+
+
 from flask import Flask, request, g, abort, jsonify
 from flask.ext.cache import Cache
 

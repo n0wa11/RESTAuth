@@ -24,7 +24,7 @@ def make_cache_key(*args, **kwargs):
 
 @views.route('/auth', methods=['GET'])
 @cache.cached(timeout=30, key_prefix=make_cache_key)
-def auth():
+def auth( u = None, p = None ):
 
     username = request.args.get('username', None)
     password = request.args.get('password', None)
@@ -41,6 +41,8 @@ def auth():
                     secret  = rad_secret,
                     dict    = Dictionary("dictionary")
                 )
+        # increase timeout
+        srv.timeout = 30
 
         req=srv.CreateAuthPacket(
                     code = pyrad.packet.AccessRequest,
