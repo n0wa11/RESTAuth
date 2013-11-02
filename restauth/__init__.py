@@ -8,7 +8,12 @@ os.environ['TZ'] = 'Asia/Shanghai'
 time.tzset()
 
 from flask import Flask, request, g, abort, jsonify
+from flask.ext.cache import Cache
+
 app = Flask(__name__)
+
+cache = Cache()
+cache.init_app(app, config={'CACHE_TYPE': 'simple'})
 
 import config
 app.config.from_object('config')
