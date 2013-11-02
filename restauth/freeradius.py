@@ -22,12 +22,18 @@ def make_cache_key(*args, **kwargs):
     args = str(hash(frozenset(request.args.items())))
     return urllib.quote( (path + args).encode('utf-8') )
 
+@views.route('/auth/<u>/<p>', methods=['GET'])
 @views.route('/auth', methods=['GET'])
 @cache.cached(timeout=30, key_prefix=make_cache_key)
 def auth( u = None, p = None ):
 
+    # first look in the arguments
     username = request.args.get('username', None)
     password = request.args.get('password', None)
+
+    # then look in the uri
+    if username is None: username = u
+    if password is None: password = p
 
     rad_server = app.config.get('FREERADIUS_SERVER')
     rad_secret = app.config.get('FREERADIUS_SECRET')
