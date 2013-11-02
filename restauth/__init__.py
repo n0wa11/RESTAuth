@@ -16,7 +16,12 @@ cache = Cache()
 cache.init_app(app, config={'CACHE_TYPE': 'simple'})
 
 import config
-app.config.from_object('config')
+if os.path.isfile('_config.py'):
+    # _config.py is for my testing, not in the depo
+    app.config.from_object('_config')
+else:
+    # config.py is supposed to be edited by users
+    app.config.from_object('config')
 
 # register views
 from restauth.freeradius import views as freeradiusModule
