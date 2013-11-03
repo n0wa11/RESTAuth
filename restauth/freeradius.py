@@ -20,20 +20,36 @@ from pyrad.dictionary import Dictionary
 def make_cache_key(*args, **kwargs):
     path = request.path
     args = str(hash(frozenset(request.args.items())))
-    return urllib.quote( (path + args).encode('utf-8') )
+    headers = str(hash(frozenset(request.headers.items())))
+    return urllib.quote( (path + args + headers).encode('utf-8') )
 
-@views.route('/auth/<u>/<p>', methods=['GET'])
-@views.route('/auth', methods=['GET'])
+
+@views.route('/auth', defaults={'path': ''}, methods=['GET'])
+@views.route('/auth/<path:path>', methods=['GET'])
 @cache.cached(timeout=30, key_prefix=make_cache_key)
-def auth( u = None, p = None ):
+def auth( path ):
 
     # first look in the arguments
     username = request.args.get('username', None)
     password = request.args.get('password', None)
 
-    # then look in the uri
-    if username is None: username = u
-    if password is None: password = p
+    # then look in the uri or in the X-Auth-Info header
+    auth_header = app.config.get('AUTH_HEADER', '')
+    if not (username and password) :
+        s1 = path.split('/')
+
+        path2 = request.headers.get(auth_header, "")
+        s2 = path2.split('/')
+
+        s = []
+        if len(s1) >= 2: s = s1
+        elif len(s2) >= 2: s = s2
+
+        if len(s) >= 2:
+            username = s[0]
+            password = s[1]
+
+    app.logger.debug("Incoming auth request: %s/%s" % (username, password) )
 
     rad_server = app.config.get('FREERADIUS_SERVER')
     rad_secret = app.config.get('FREERADIUS_SECRET')
@@ -59,13 +75,10 @@ def auth( u = None, p = None ):
 
         reply=srv.SendPacket(req)
         if reply.code==pyrad.packet.AccessAccept:
-            #print "status 200"
             return jsonify(), 200
         else:
-            #print "status 403"
             return jsonify(), 403
 
     else:
-        #print "status 400"
-        return jsonify(), 400
+        return jsonify(), 403
 
